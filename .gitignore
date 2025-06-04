@@ -1,0 +1,53 @@
+# .gitignore
+
+# Environment variables
+.env
+
+# Virtual environment
+venv/
+.env/
+venv*/
+*.venv
+env/
+env*/
+
+# Python cache and bytecode
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+*.pyc
+
+# Database files
+*.db
+*.sqlite
+*.sqlite3
+
+# IDE files
+.vscode/
+.idea/
+*.iml
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.swp
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Log files
+*.log
+
+# Testing files
+coverage/
+htmlcov/
+.coverage
+.pytest_cache/
+
+# Build and distribution
+build/
+dist/
+*.egg-info/
+*.egg
