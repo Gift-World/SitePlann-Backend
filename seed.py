@@ -1,5 +1,5 @@
 from app import app
-from models import db, User, Project
+from models import db, User, Project , bcrypt
 from datetime import datetime, timedelta
 
 def seed_database():

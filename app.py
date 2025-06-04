@@ -4,6 +4,7 @@ from flask_login import LoginManager, login_user, current_user, login_required, 
 from models import db, bcrypt, User, Project
 from datetime import datetime
 
+
 app = Flask(__name__)
 app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get('DATABASE_URL', 'sqlite:///site.db')
 app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', 'your-secret-key-here')
@@ -21,9 +22,9 @@ def load_user(user_id):
     return User.query.get(int(user_id))
 
 # Create tables before first request
-@app.before_first_request
-def create_tables():
-    db.create_all()
+# @app.before_first_request
+# def create_tables():
+#     db.create_all()
 
 # --------------------- Authentication Routes ---------------------
 @app.route('/api/signup', methods=['POST'])
