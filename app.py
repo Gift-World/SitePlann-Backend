@@ -4,7 +4,6 @@ from flask_login import LoginManager, login_user, current_user, login_required, 
 from models import db, bcrypt, User, Project
 from datetime import datetime
 
-
 app = Flask(__name__)
 app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get('DATABASE_URL', 'sqlite:///site.db')
 app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', 'your-secret-key-here')
@@ -20,11 +19,6 @@ login_manager.login_view = 'login'
 @login_manager.user_loader
 def load_user(user_id):
     return User.query.get(int(user_id))
-
-# Create tables before first request
-# @app.before_first_request
-# def create_tables():
-#     db.create_all()
 
 # --------------------- Authentication Routes ---------------------
 @app.route('/api/signup', methods=['POST'])
@@ -90,26 +84,30 @@ def create_project():
     if not data.get('title'):
         return jsonify({"error": "Project title is required"}), 400
     
-    new_project = Project(
-        title=data.get('title'),
-        client_name=data.get('client_name'),
-        contractor_name=data.get('contractor_name'),
-        currency=data.get('currency', 'USD'),
-        project_cost=data.get('project_cost'),
-        site_location=data.get('site_location'),
-        client_email=data.get('client_email'),
-        contractor_email=data.get('contractor_email'),
-        completion_date=datetime.fromisoformat(data['completion_date']) if data.get('completion_date') else None,
-        start_date=datetime.fromisoformat(data['start_date']) if data.get('start_date') else None,
-        progress=data.get('progress', 0),
-        user_id=current_user.id
-    )
+    try:
+        new_project = Project(
+            title=data.get('title'),
+            client_name=data.get('client_name'),
+            contractor_name=data.get('contractor_name'),
+            currency=data.get('currency', 'USD'),
+            project_cost=data.get('project_cost'),
+            site_location=data.get('site_location'),
+            client_email=data.get('client_email'),
+            contractor_email=data.get('contractor_email'),
+            completion_date=datetime.fromisoformat(data['completion_date']) if data.get('completion_date') else None,
+            start_date=datetime.fromisoformat(data['start_date']) if data.get('start_date') else None,
+            progress=data.get('progress', 0),
+            user_id=current_user.id
+        )
+    except ValueError as e:
+        return jsonify({"error": f"Invalid date format: {str(e)}"}), 400
     
     db.session.add(new_project)
     db.session.commit()
     return jsonify({
         "message": "Project created successfully",
-        "project_id": new_project.id
+        "project_id": new_project.id,
+        "project": new_project.to_dict()
     }), 201
 
 @app.route('/api/projects', methods=['GET'])
@@ -126,7 +124,8 @@ def get_project(project_id):
         return jsonify({"error": "Unauthorized"}), 403
     return jsonify(project.to_dict()), 200
 
-@app.route('/api/projects/<int:project_id>', methods=['PUT'])
+# Changed from PUT to PATCH for partial updates
+@app.route('/api/projects/<int:project_id>', methods=['PATCH'])
 @login_required
 def update_project(project_id):
     project = Project.query.get_or_404(project_id)
@@ -135,24 +134,39 @@ def update_project(project_id):
         
     data = request.get_json()
     
-    # Update fields
-    project.title = data.get('title', project.title)
-    project.client_name = data.get('client_name', project.client_name)
-    project.contractor_name = data.get('contractor_name', project.contractor_name)
-    project.currency = data.get('currency', project.currency)
-    project.project_cost = data.get('project_cost', project.project_cost)
-    project.site_location = data.get('site_location', project.site_location)
-    project.client_email = data.get('client_email', project.client_email)
-    project.contractor_email = data.get('contractor_email', project.contractor_email)
-    project.progress = data.get('progress', project.progress)
+    # Update only provided fields
+    if 'title' in data:
+        project.title = data['title']
+    if 'client_name' in data:
+        project.client_name = data['client_name']
+    if 'contractor_name' in data:
+        project.contractor_name = data['contractor_name']
+    if 'currency' in data:
+        project.currency = data['currency']
+    if 'project_cost' in data:
+        project.project_cost = data['project_cost']
+    if 'site_location' in data:
+        project.site_location = data['site_location']
+    if 'client_email' in data:
+        project.client_email = data['client_email']
+    if 'contractor_email' in data:
+        project.contractor_email = data['contractor_email']
+    if 'progress' in data:
+        project.progress = data['progress']
     
-    if 'completion_date' in data:
-        project.completion_date = datetime.fromisoformat(data['completion_date'])
-    if 'start_date' in data:
-        project.start_date = datetime.fromisoformat(data['start_date'])
+    try:
+        if 'completion_date' in data:
+            project.completion_date = datetime.fromisoformat(data['completion_date'])
+        if 'start_date' in data:
+            project.start_date = datetime.fromisoformat(data['start_date'])
+    except ValueError as e:
+        return jsonify({"error": f"Invalid date format: {str(e)}"}), 400
     
     db.session.commit()
-    return jsonify(project.to_dict()), 200
+    return jsonify({
+        "message": "Project updated successfully",
+        "project": project.to_dict()
+    }), 200
 
 @app.route('/api/projects/<int:project_id>', methods=['DELETE'])
 @login_required
@@ -166,4 +180,6 @@ def delete_project(project_id):
     return jsonify({"message": "Project deleted successfully"}), 200
 
 if __name__ == '__main__':
+    with app.app_context():
+        db.create_all()
     app.run(debug=True)
