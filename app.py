@@ -1,6 +1,6 @@
 import os
 from flask import Flask, request, jsonify
-from flask_login import LoginManager, login_user, current_user, login_required, logout_user
+# from flask_login import LoginManager, login_user, current_user, login_required, logout_user
 from models import db, bcrypt, User, Project
 from datetime import datetime
 
@@ -14,10 +14,10 @@ db.init_app(app)
 bcrypt.init_app(app)
 
 # Flask-Login setup
-login_manager = LoginManager(app)
-login_manager.login_view = 'login'
+# login_manager = LoginManager(app)
+# login_manager.login_view = 'login'
 
-@login_manager.user_loader
+# @login_manager.user_loader
 def load_user(user_id):
     return User.query.get(int(user_id))
 
@@ -32,9 +32,9 @@ def signup():
     data = request.get_json()
     username = data.get('username')
     email = data.get('email')
-    password = data.get('password')
+    clerk_id = data.get('clerk_id')
     
-    if not all([username, email, password]):
+    if not all([username, email, clerk_id]):
         return jsonify({"error": "Missing required fields"}), 400
     
     # Check if user exists
@@ -43,8 +43,7 @@ def signup():
         return jsonify({"error": "Email or username already exists"}), 409
     
     # Create new user
-    hashed_password = bcrypt.generate_password_hash(password).decode('utf-8')
-    new_user = User(username=username, email=email, password=hashed_password)
+    new_user = User(username=username, email=email, clerk_id=clerk_id)
     db.session.add(new_user)
     db.session.commit()
     
@@ -54,8 +53,8 @@ def signup():
         "username": new_user.username
     }), 201
 
-@app.route('/api/login', methods=['POST'])
-def login():
+# @app.route('/api/login', methods=['POST'])
+# def login():
     data = request.get_json()
     email = data.get('email')
     password = data.get('password')
@@ -75,20 +74,22 @@ def login():
         
     return jsonify({"error": "Invalid credentials"}), 401
 
-@app.route('/api/logout', methods=['POST'])
-@login_required
-def logout():
+# @app.route('/api/logout', methods=['POST'])
+# @login_required
+# def logout():
     logout_user()
     return jsonify({"message": "Logged out successfully"}), 200
 
 # --------------------- Project CRUD Routes ---------------------
 @app.route('/api/projects', methods=['POST'])
-@login_required
+# @login_required
 def create_project():
     data = request.get_json()
     
     if not data.get('title'):
         return jsonify({"error": "Project title is required"}), 400
+    
+    user = User()
     
     new_project = Project(
         title=data.get('title'),
@@ -102,7 +103,7 @@ def create_project():
         completion_date=datetime.fromisoformat(data['completion_date']) if data.get('completion_date') else None,
         start_date=datetime.fromisoformat(data['start_date']) if data.get('start_date') else None,
         progress=data.get('progress', 0),
-        user_id=current_user.id
+        user_id=user.clerk_id
     )
     
     db.session.add(new_project)
@@ -113,24 +114,27 @@ def create_project():
     }), 201
 
 @app.route('/api/projects', methods=['GET'])
-@login_required
+# @login_required
 def get_projects():
-    projects = Project.query.filter_by(user_id=current_user.id).all()
+    user = User()
+    projects = Project.query.filter_by(user_id=user.clerk_id).all()
     return jsonify([p.to_dict() for p in projects]), 200
 
 @app.route('/api/projects/<int:project_id>', methods=['GET'])
-@login_required
+# @login_required
 def get_project(project_id):
+    user = User()
     project = Project.query.get_or_404(project_id)
-    if project.user_id != current_user.id:
+    if project.user_id != user.clerk_id:
         return jsonify({"error": "Unauthorized"}), 403
     return jsonify(project.to_dict()), 200
 
 @app.route('/api/projects/<int:project_id>', methods=['PUT'])
-@login_required
+# @login_required
 def update_project(project_id):
+    user = User()
     project = Project.query.get_or_404(project_id)
-    if project.user_id != current_user.id:
+    if project.user_id != user.clerk_id:
         return jsonify({"error": "Unauthorized"}), 403
         
     data = request.get_json()
@@ -155,10 +159,11 @@ def update_project(project_id):
     return jsonify(project.to_dict()), 200
 
 @app.route('/api/projects/<int:project_id>', methods=['DELETE'])
-@login_required
+# @login_required
 def delete_project(project_id):
+    user = User()
     project = Project.query.get_or_404(project_id)
-    if project.user_id != current_user.id:
+    if project.user_id != user.clerk_id:
         return jsonify({"error": "Unauthorized"}), 403
         
     db.session.delete(project)
