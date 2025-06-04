@@ -10,7 +10,7 @@ class User(UserMixin, db.Model):
     id = db.Column(db.Integer, primary_key=True)
     username = db.Column(db.String(50), unique=True, nullable=False)
     email = db.Column(db.String(100), unique=True, nullable=False)
-    password = db.Column(db.String(100), nullable=False)
+    clerk_id = db.Column(db.String(100), nullable=False)
     projects = db.relationship('Project', backref='owner', lazy=True)
 
 class Project(db.Model):
@@ -26,7 +26,7 @@ class Project(db.Model):
     completion_date = db.Column(db.DateTime, nullable=True)
     start_date = db.Column(db.DateTime, nullable=True)
     progress = db.Column(db.Integer, default=0)
-    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+    user_id = db.Column(db.String(100), db.ForeignKey('user.clerk_id'), nullable=False)
     
     def to_dict(self):
         return {
