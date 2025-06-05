@@ -260,7 +260,3 @@ if __name__ == '__main__':
     app.run(debug=True)
 
 
-# -----------------------Other--------------------#
-
-        # completion_date=datetime.fromisoformat(data['completion_date']) if data.get('completion_date') else None,
-        # start_date=datetime.fromisoformat(data['start_date']) if data.get('start_date') else None,
