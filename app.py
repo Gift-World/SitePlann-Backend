@@ -11,6 +11,7 @@ app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', 'your-secret-key-here')
 
 db.init_app(app)
 bcrypt.init_app(app)
+#  Change CORS During production
 CORS(app, resources={r"/api/*": {"origins": "*"}}, supports_credentials=True)
 
 # Creating tables before first request incase there are no tables
