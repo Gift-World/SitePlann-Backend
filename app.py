@@ -3,6 +3,7 @@ from flask import Flask, request, jsonify
 from models import db, bcrypt, User, Project ,TeamMember, Task
 from datetime import datetime
 from flask_cors import CORS
+from flask_migrate import Migrate
 
 app = Flask(__name__)
 app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get('DATABASE_URL', 'sqlite:///site.db')
@@ -10,6 +11,7 @@ app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', 'your-secret-key-here')
 
 
 db.init_app(app)
+migrate = Migrate(app, db)
 bcrypt.init_app(app)
 #  Change CORS During production
 CORS(app, resources={r"/api/*": {"origins": "*"}}, supports_credentials=True)
@@ -67,6 +69,7 @@ def create_project():
         contractor_name=data.get('contractor_name'),
         currency=data.get('currency', 'USD'),
         project_cost=data.get('project_cost'),
+        description=data.get('description'),
         site_location=data.get('site_location'),
         client_email=data.get('client_email'),
         contractor_email=data.get('contractor_email'),

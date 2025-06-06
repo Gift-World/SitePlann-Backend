@@ -2,9 +2,17 @@ from flask_sqlalchemy import SQLAlchemy
 from flask_login import UserMixin
 from flask_bcrypt import Bcrypt
 from datetime import datetime
+from enum import Enum
+from sqlalchemy import Enum as SQLAlchemyEnum
 
 db = SQLAlchemy()
 bcrypt = Bcrypt()
+
+class Status(Enum):
+    PLANNING = "Planning"
+    IN_PROGRESS = "In Progress"
+    COMPLETED = "Completed"
+    ON_HOLD = "On Hold"
 
 class User(UserMixin, db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -17,6 +25,8 @@ class User(UserMixin, db.Model):
 class Project(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     title = db.Column(db.String(100), nullable=False)
+    description = db.Column(db.String(100), nullable=False)
+    status = db.Column(SQLAlchemyEnum(Status),nullable=False , default=Status.PLANNING)
     client_name = db.Column(db.String(100), nullable=True)
     contractor_name = db.Column(db.String(100), nullable=True)
     currency = db.Column(db.String(10), default='USD')
@@ -35,6 +45,7 @@ class Project(db.Model):
         return {
             "id": self.id,
             "title": self.title,
+            "description":self.description,
             "client_name": self.client_name,
             "contractor_name": self.contractor_name,
             "currency": self.currency,
@@ -45,7 +56,8 @@ class Project(db.Model):
             "completion_date": self.completion_date.isoformat() if self.completion_date else None,
             "start_date": self.start_date.isoformat() if self.start_date else None,
             "progress": self.progress,
-            "user_id": self.user_id
+            "user_id": self.user_id,
+            "status": self.status.name
         }
         
 class TeamMember(db.Model):
