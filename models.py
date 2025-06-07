@@ -20,7 +20,7 @@ class User(UserMixin, db.Model):
     email = db.Column(db.String(100), unique=True, nullable=False)
     clerk_id = db.Column(db.String(100), nullable=False)
     projects = db.relationship('Project', backref='owner', lazy=True)
-    team_members = db.relationship('TeamMember', backref='user', lazy=True)
+    # team_members = db.relationship('TeamMember', backref='user', lazy=True)
 
 class Project(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -34,12 +34,14 @@ class Project(db.Model):
     site_location = db.Column(db.String(200), nullable=True)
     client_email = db.Column(db.String(100), nullable=True)
     contractor_email = db.Column(db.String(100), nullable=True)
+    
+    # year  month date
     completion_date = db.Column(db.DateTime, nullable=True)
     start_date = db.Column(db.DateTime, nullable=True)
     progress = db.Column(db.Integer, default=0)
-    user_id = db.Column(db.String(100), db.ForeignKey('user.clerk_id'), nullable=False)
-    tasks = db.relationship('Task', backref='project', lazy=True)
-    team_members = db.relationship('TeamMember', backref='project', lazy=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+    # tasks = db.relationship('Task', backref='project', lazy=True)
+    # team_members = db.relationship('TeamMember', backref='project', lazy=True)
     
     def to_dict(self):
         return {
@@ -60,48 +62,48 @@ class Project(db.Model):
             "status": self.status.name
         }
         
-class TeamMember(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
-    full_name = db.Column(db.String(100), nullable=False)
-    email = db.Column(db.String(100), nullable=False)
-    role = db.Column(db.String(50), nullable=False)  # e.g., "Supervisor", "Labor"
-    designation = db.Column(db.String(100), nullable=True)
-    bio = db.Column(db.Text, nullable=True)
-    user_id = db.Column(db.String(100), db.ForeignKey('user.clerk_id'), nullable=False)
-    project_id = db.Column(db.Integer, db.ForeignKey('project.id'), nullable=False)
+# class TeamMember(db.Model):
+#     id = db.Column(db.Integer, primary_key=True)
+#     full_name = db.Column(db.String(100), nullable=False)
+#     email = db.Column(db.String(100), nullable=False)
+#     role = db.Column(db.String(50), nullable=False)  # e.g., "Supervisor", "Labor"
+#     designation = db.Column(db.String(100), nullable=True)
+#     bio = db.Column(db.Text, nullable=True)
+#     user_id = db.Column(db.String(100), db.ForeignKey('user.clerk_id'), nullable=False)
+#     project_id = db.Column(db.Integer, db.ForeignKey('project.id'), nullable=False)
 
-    def to_dict(self):
-        return {
-            "id": self.id,
-            "full_name": self.full_name,
-            "email": self.email,
-            "role": self.role,
-            "designation": self.designation,
-            "bio": self.bio,
-            "project_id": self.project_id
-        }
+#     def to_dict(self):
+#         return {
+#             "id": self.id,
+#             "full_name": self.full_name,
+#             "email": self.email,
+#             "role": self.role,
+#             "designation": self.designation,
+#             "bio": self.bio,
+#             "project_id": self.project_id
+#         }
 
-class Task(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
-    title = db.Column(db.String(100), nullable=False)
-    description = db.Column(db.Text, nullable=True)
-    priority = db.Column(db.String(20), default='Medium')  # Low/Medium/High
-    status = db.Column(db.String(20), default='Not Started')  # Not Started/In Progress/Completed
-    start_date = db.Column(db.DateTime, nullable=True)
-    due_date = db.Column(db.DateTime, nullable=True)
-    project_id = db.Column(db.Integer, db.ForeignKey('project.id'), nullable=False)
-    assignee_id = db.Column(db.Integer, db.ForeignKey('team_member.id'), nullable=True)
-    assignee = db.relationship('TeamMember', backref='tasks')
+# class Task(db.Model):
+#     id = db.Column(db.Integer, primary_key=True)
+#     title = db.Column(db.String(100), nullable=False)
+#     description = db.Column(db.Text, nullable=True)
+#     priority = db.Column(db.String(20), default='Medium')  # Low/Medium/High
+#     status = db.Column(db.String(20), default='Not Started')  # Not Started/In Progress/Completed
+#     start_date = db.Column(db.DateTime, nullable=True)
+#     due_date = db.Column(db.DateTime, nullable=True)
+#     project_id = db.Column(db.Integer, db.ForeignKey('project.id'), nullable=False)
+#     assignee_id = db.Column(db.Integer, db.ForeignKey('team_member.id'), nullable=True)
+#     assignee = db.relationship('TeamMember', backref='tasks')
 
-    def to_dict(self):
-        return {
-            "id": self.id,
-            "title": self.title,
-            "description": self.description,
-            "priority": self.priority,
-            "status": self.status,
-            "start_date": self.start_date.isoformat() if self.start_date else None,
-            "due_date": self.due_date.isoformat() if self.due_date else None,
-            "project_id": self.project_id,
-            "assignee_id": self.assignee_id
-        }        
+#     def to_dict(self):
+#         return {
+#             "id": self.id,
+#             "title": self.title,
+#             "description": self.description,
+#             "priority": self.priority,
+#             "status": self.status,
+#             "start_date": self.start_date.isoformat() if self.start_date else None,
+#             "due_date": self.due_date.isoformat() if self.due_date else None,
+#             "project_id": self.project_id,
+#             "assignee_id": self.assignee_id
+#         }        

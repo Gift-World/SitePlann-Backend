@@ -1,13 +1,21 @@
+import psycopg2
+from dotenv import load_dotenv
+
+load_dotenv()
+
 import os
 from flask import Flask, request, jsonify
-from models import db, bcrypt, User, Project ,TeamMember, Task
+from models import db, bcrypt, User, Project 
 from datetime import datetime
 from flask_cors import CORS
 from flask_migrate import Migrate
 
+
+
+
 app = Flask(__name__)
-app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get('DATABASE_URL', 'sqlite:///site.db')
-app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', 'your-secret-key-here')
+app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get('DATABASE_URL')
+# app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', 'your-secret-key-here')
 
 
 db.init_app(app)
@@ -76,7 +84,7 @@ def create_project():
         completion_date=datetime.fromisoformat(data['completion_date']) if data.get('completion_date') else None,
         start_date=datetime.fromisoformat(data['start_date']) if data.get('start_date') else None,
         progress=data.get('progress', 0),
-        user_id=user.clerk_id
+        user_id=user.id
     )
     
     db.session.add(new_project)
@@ -136,124 +144,124 @@ def project_detail(project_id):
         return jsonify({"message": "Project deleted"}), 200
 
 # ------------------- Team Members -------------------
-@app.route('/api/projects/<int:project_id>/team-members/', methods=['GET', 'POST'])
-def team_members(project_id):
-    clerk_id = request.args.get('user_id')
-    user = get_user_by_clerk_id(clerk_id)
-    if not user:
-        return jsonify({"error": "User not found"}), 404
+# @app.route('/api/projects/<int:project_id>/team-members/', methods=['GET', 'POST'])
+# def team_members(project_id):
+#     clerk_id = request.args.get('user_id')
+#     user = get_user_by_clerk_id(clerk_id)
+#     if not user:
+#         return jsonify({"error": "User not found"}), 404
 
-    project = Project.query.get_or_404(project_id)
-    if project.user_id != user.clerk_id:
-        return jsonify({"error": "Unauthorized"}), 403
+#     project = Project.query.get_or_404(project_id)
+#     if project.user_id != user.clerk_id:
+#         return jsonify({"error": "Unauthorized"}), 403
 
-    if request.method == 'GET':
-        return jsonify([m.to_dict() for m in project.team_members]), 200
+#     if request.method == 'GET':
+#         return jsonify([m.to_dict() for m in project.team_members]), 200
 
-    if request.method == 'POST':
-        data = request.get_json()
-        new_member = TeamMember(
-            full_name=data['full_name'],
-            email=data['email'],
-            role=data.get('role', 'Labor'),
-            designation=data.get('designation'),
-            bio=data.get('bio'),
-            user_id=user.clerk_id,
-            project_id=project.id
-        )
-        db.session.add(new_member)
-        db.session.commit()
-        return jsonify(new_member.to_dict()), 201
+#     if request.method == 'POST':
+#         data = request.get_json()
+#         new_member = TeamMember(
+#             full_name=data['full_name'],
+#             email=data['email'],
+#             role=data.get('role', 'Labor'),
+#             designation=data.get('designation'),
+#             bio=data.get('bio'),
+#             user_id=user.clerk_id,
+#             project_id=project.id
+#         )
+#         db.session.add(new_member)
+#         db.session.commit()
+#         return jsonify(new_member.to_dict()), 201
 
-@app.route('/api/team-members/<int:member_id>/', methods=['GET', 'PATCH', 'DELETE'])
-def team_member_detail(member_id):
-    clerk_id = request.args.get('user_id')
-    user = get_user_by_clerk_id(clerk_id)
-    if not user:
-        return jsonify({"error": "User not found"}), 404
+# @app.route('/api/team-members/<int:member_id>/', methods=['GET', 'PATCH', 'DELETE'])
+# def team_member_detail(member_id):
+#     clerk_id = request.args.get('user_id')
+#     user = get_user_by_clerk_id(clerk_id)
+#     if not user:
+#         return jsonify({"error": "User not found"}), 404
 
-    member = TeamMember.query.get_or_404(member_id)
-    if member.user_id != user.clerk_id:
-        return jsonify({"error": "Unauthorized"}), 403
+#     member = TeamMember.query.get_or_404(member_id)
+#     if member.user_id != user.clerk_id:
+#         return jsonify({"error": "Unauthorized"}), 403
 
-    if request.method == 'GET':
-        return jsonify(member.to_dict()), 200
+#     if request.method == 'GET':
+#         return jsonify(member.to_dict()), 200
 
-    if request.method == 'PATCH':
-        data = request.get_json()
-        for field in ['full_name', 'email', 'role', 'designation', 'bio']:
-            if field in data:
-                setattr(member, field, data[field])
-        db.session.commit()
-        return jsonify(member.to_dict()), 200
+#     if request.method == 'PATCH':
+#         data = request.get_json()
+#         for field in ['full_name', 'email', 'role', 'designation', 'bio']:
+#             if field in data:
+#                 setattr(member, field, data[field])
+#         db.session.commit()
+#         return jsonify(member.to_dict()), 200
 
-    if request.method == 'DELETE':
-        db.session.delete(member)
-        db.session.commit()
-        return jsonify({"message": "Team member deleted"}), 200
+#     if request.method == 'DELETE':
+#         db.session.delete(member)
+#         db.session.commit()
+#         return jsonify({"message": "Team member deleted"}), 200
 
 
-# ------------------- Tasks -------------------
-@app.route('/api/projects/<int:project_id>/tasks/', methods=['GET', 'POST'])
-def tasks(project_id):
-    clerk_id = request.args.get('user_id')
-    user = get_user_by_clerk_id(clerk_id)
-    if not user:
-        return jsonify({"error": "User not found"}), 404
+# # ------------------- Tasks -------------------
+# @app.route('/api/projects/<int:project_id>/tasks/', methods=['GET', 'POST'])
+# def tasks(project_id):
+#     clerk_id = request.args.get('user_id')
+#     user = get_user_by_clerk_id(clerk_id)
+#     if not user:
+#         return jsonify({"error": "User not found"}), 404
 
-    project = Project.query.get_or_404(project_id)
-    if project.user_id != user.clerk_id:
-        return jsonify({"error": "Unauthorized"}), 403
+#     project = Project.query.get_or_404(project_id)
+#     if project.user_id != user.clerk_id:
+#         return jsonify({"error": "Unauthorized"}), 403
 
-    if request.method == 'GET':
-        return jsonify([t.to_dict() for t in project.tasks]), 200
+#     if request.method == 'GET':
+#         return jsonify([t.to_dict() for t in project.tasks]), 200
 
-    if request.method == 'POST':
-        data = request.get_json()
-        new_task = Task(
-            title=data['title'],
-            description=data.get('description'),
-            priority=data.get('priority', 'Medium'),
-            status=data.get('status', 'Not Started'),
-            start_date=datetime.fromisoformat(data['start_date']) if data.get('start_date') else None,
-            due_date=datetime.fromisoformat(data['due_date']) if data.get('due_date') else None,
-            project_id=project.id,
-            assignee_id=data.get('assignee_id')
-        )
-        db.session.add(new_task)
-        db.session.commit()
-        return jsonify(new_task.to_dict()), 201
+#     if request.method == 'POST':
+#         data = request.get_json()
+#         new_task = Task(
+#             title=data['title'],
+#             description=data.get('description'),
+#             priority=data.get('priority', 'Medium'),
+#             status=data.get('status', 'Not Started'),
+#             start_date=datetime.fromisoformat(data['start_date']) if data.get('start_date') else None,
+#             due_date=datetime.fromisoformat(data['due_date']) if data.get('due_date') else None,
+#             project_id=project.id,
+#             assignee_id=data.get('assignee_id')
+#         )
+#         db.session.add(new_task)
+#         db.session.commit()
+#         return jsonify(new_task.to_dict()), 201
 
-@app.route('/api/tasks/<int:task_id>/', methods=['GET', 'PATCH', 'DELETE'])
-def task_detail(task_id):
-    clerk_id = request.args.get('user_id')
-    user = get_user_by_clerk_id(clerk_id)
-    if not user:
-        return jsonify({"error": "User not found"}), 404
+# @app.route('/api/tasks/<int:task_id>/', methods=['GET', 'PATCH', 'DELETE'])
+# def task_detail(task_id):
+#     clerk_id = request.args.get('user_id')
+#     user = get_user_by_clerk_id(clerk_id)
+#     if not user:
+#         return jsonify({"error": "User not found"}), 404
 
-    task = Task.query.get_or_404(task_id)
-    if task.project.user_id != user.clerk_id:
-        return jsonify({"error": "Unauthorized"}), 403
+#     task = Task.query.get_or_404(task_id)
+#     if task.project.user_id != user.clerk_id:
+#         return jsonify({"error": "Unauthorized"}), 403
 
-    if request.method == 'GET':
-        return jsonify(task.to_dict()), 200
+#     if request.method == 'GET':
+#         return jsonify(task.to_dict()), 200
 
-    if request.method == 'PATCH':
-        data = request.get_json()
-        for field in ['title', 'description', 'priority', 'status', 'assignee_id']:
-            if field in data:
-                setattr(task, field, data[field])
-        if 'start_date' in data:
-            task.start_date = datetime.fromisoformat(data['start_date'])
-        if 'due_date' in data:
-            task.due_date = datetime.fromisoformat(data['due_date'])
-        db.session.commit()
-        return jsonify(task.to_dict()), 200
+#     if request.method == 'PATCH':
+#         data = request.get_json()
+#         for field in ['title', 'description', 'priority', 'status', 'assignee_id']:
+#             if field in data:
+#                 setattr(task, field, data[field])
+#         if 'start_date' in data:
+#             task.start_date = datetime.fromisoformat(data['start_date'])
+#         if 'due_date' in data:
+#             task.due_date = datetime.fromisoformat(data['due_date'])
+#         db.session.commit()
+#         return jsonify(task.to_dict()), 200
 
-    if request.method == 'DELETE':
-        db.session.delete(task)
-        db.session.commit()
-        return jsonify({"message": "Task deleted"}), 200
+#     if request.method == 'DELETE':
+#         db.session.delete(task)
+#         db.session.commit()
+#         return jsonify({"message": "Task deleted"}), 200
 
 
 # Run the app
