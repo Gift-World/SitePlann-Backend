@@ -15,6 +15,12 @@ class Status(Enum):
     IN_PROGRESS = "In Progress"
     COMPLETED = "Completed"
     ON_HOLD = "On Hold"
+    
+class TaskStatus(Enum):
+    NOT_STARTED = "Not Started"
+    IN_PROGRESS = "In Progress"
+    COMPLETED = "Completed"
+    ON_HOLD = "On Hold"    
 
 class User(UserMixin, db.Model):
     # id = db.Column(db.Integer, primary_key=True)
@@ -44,9 +50,12 @@ class Project(db.Model):
     start_date = db.Column(db.DateTime, nullable=True)
     progress = db.Column(db.Integer, default=0)
     user_id = db.Column(UUID(as_uuid=True), db.ForeignKey('user.id'), nullable=False)
-    # user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
-    # tasks = db.relationship('Task', backref='project', lazy=True)
-    # team_members = db.relationship('TeamMember', backref='project', lazy=True)
+    
+    #Relationships
+    owner = db.relationship('User', back_populates='projects')
+    team_members = db.relationship('TeamMember', backref='project', lazy=True)
+    tasks = db.relationship('Task', backref='project', lazy=True)
+    
     
     def to_dict(self):
         return {
@@ -75,10 +84,7 @@ class Team(db.Model):
     role = db.Column(db.String(50), nullable=False)  # e.g., "Supervisor", "Labor"
     designation = db.Column(db.String(100), nullable=True)
     bio = db.Column(db.Text, nullable=True)
-    # user_id = db.Column(db.String(100), db.ForeignKey('user.clerk_id'), nullable=False)
-    # user_id = db.Column(UUID(as_uuid=True), db.ForeignKey('user.id'), nullable=False)
-    # project_id = db.Column(db.Integer, db.ForeignKey('project.id'), nullable=False)
-    # project_id = db.Column(UUID(as_uuid=True), db.ForeignKey('project.id'), nullable=False)
+    project_id = db.Column(UUID(as_uuid=True), db.ForeignKey('project.id'), nullable=False)
 
     def to_dict(self):
         return {
@@ -91,27 +97,37 @@ class Team(db.Model):
             # "project_id": str(self.project_id)
         }
 
-# class Task(db.Model):
-#     id = db.Column(db.Integer, primary_key=True)
-#     title = db.Column(db.String(100), nullable=False)
-#     description = db.Column(db.Text, nullable=True)
-#     priority = db.Column(db.String(20), default='Medium')  # Low/Medium/High
-#     status = db.Column(db.String(20), default='Not Started')  # Not Started/In Progress/Completed
-#     start_date = db.Column(db.DateTime, nullable=True)
-#     due_date = db.Column(db.DateTime, nullable=True)
-#     project_id = db.Column(db.Integer, db.ForeignKey('project.id'), nullable=False)
-#     assignee_id = db.Column(db.Integer, db.ForeignKey('team_member.id'), nullable=True)
-#     assignee = db.relationship('TeamMember', backref='tasks')
+class Task(db.Model):
+    # id = db.Column(db.Integer, primary_key=True)
+    id= db.Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    title = db.Column(db.String(100), nullable=False)
+    description = db.Column(db.Text, nullable=True)
+    priority = db.Column(db.String(20), default='Medium')  # Low/Medium/High
+    status = db.Column(db.String(20), default='Not Started')  # Not Started/In Progress/Completed
+    start_date = db.Column(db.DateTime, nullable=True)
+    due_date = db.Column(db.DateTime, nullable=True)
+    # project_id = db.Column(db.Integer, db.ForeignKey('project.id'), nullable=False)
+    # assignee_id = db.Column(db.Integer, db.ForeignKey('team_member.id'), nullable=True)
+    # assignee = db.relationship('TeamMember', backref='tasks')
 
-#     def to_dict(self):
-#         return {
-#             "id": self.id,
-#             "title": self.title,
-#             "description": self.description,
-#             "priority": self.priority,
-#             "status": self.status,
-#             "start_date": self.start_date.isoformat() if self.start_date else None,
-#             "due_date": self.due_date.isoformat() if self.due_date else None,
-#             "project_id": self.project_id,
-#             "assignee_id": self.assignee_id
-#         }        
+    def to_dict(self):
+        return {
+            "id": self.id,
+            "title": self.title,
+            "description": self.description,
+            "priority": self.priority,
+            "status": self.status,
+            "start_date": self.start_date.isoformat() if self.start_date else None,
+            "due_date": self.due_date.isoformat() if self.due_date else None,
+            "project_id": self.project_id,
+            "assignee_id": self.assignee_id
+        }      
+        
+        #A user logs into the saas application using clerk, and the application retrieves their user information from Clerk.and the user is added t the database in supabase where we can see them.The user can then create a project, which is stored in the database. The user can also add team members to the project, and these team members are stored in the database as well. The user can then create tasks for the project, which are also stored in the database. The user can update the status of the project and tasks, and these updates are reflected in the database. The user can also view their projects, team members, and tasks through the application interface.the relationships between the models are as follows:
+# User has many Projects or a single project
+# Project has many Team Members and Tasks
+# Team Member belongs to a Project
+# Task belongs to a Project and can be assigned to a Team Member
+# Project has many Team Members and Tasks
+# Team Member can many Tasks
+# a project belongs to a user
