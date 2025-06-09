@@ -50,7 +50,7 @@ class Project(db.Model):
     
     def to_dict(self):
         return {
-            "id": self.id,
+            "id": str(self.id),
             "title": self.title,
             "description":self.description,
             "client_name": self.client_name,
@@ -63,7 +63,7 @@ class Project(db.Model):
             "completion_date": self.completion_date.isoformat() if self.completion_date else None,
             "start_date": self.start_date.isoformat() if self.start_date else None,
             "progress": self.progress,
-            "user_id": self.user_id,
+            "user_id": str(self.user_id),
             "status": self.status.name
         }
         
