@@ -67,26 +67,29 @@ class Project(db.Model):
             "status": self.status.name
         }
         
-# class TeamMember(db.Model):
-#     id = db.Column(db.Integer, primary_key=True)
-#     full_name = db.Column(db.String(100), nullable=False)
-#     email = db.Column(db.String(100), nullable=False)
-#     role = db.Column(db.String(50), nullable=False)  # e.g., "Supervisor", "Labor"
-#     designation = db.Column(db.String(100), nullable=True)
-#     bio = db.Column(db.Text, nullable=True)
-#     user_id = db.Column(db.String(100), db.ForeignKey('user.clerk_id'), nullable=False)
-#     project_id = db.Column(db.Integer, db.ForeignKey('project.id'), nullable=False)
+class Team(db.Model):
+    # id = db.Column(db.Integer, primary_key=True)
+    id= db.Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    full_name = db.Column(db.String(100), nullable=False)
+    email = db.Column(db.String(100), nullable=False)
+    role = db.Column(db.String(50), nullable=False)  # e.g., "Supervisor", "Labor"
+    designation = db.Column(db.String(100), nullable=True)
+    bio = db.Column(db.Text, nullable=True)
+    # user_id = db.Column(db.String(100), db.ForeignKey('user.clerk_id'), nullable=False)
+    # user_id = db.Column(UUID(as_uuid=True), db.ForeignKey('user.id'), nullable=False)
+    # project_id = db.Column(db.Integer, db.ForeignKey('project.id'), nullable=False)
+    # project_id = db.Column(UUID(as_uuid=True), db.ForeignKey('project.id'), nullable=False)
 
-#     def to_dict(self):
-#         return {
-#             "id": self.id,
-#             "full_name": self.full_name,
-#             "email": self.email,
-#             "role": self.role,
-#             "designation": self.designation,
-#             "bio": self.bio,
-#             "project_id": self.project_id
-#         }
+    def to_dict(self):
+        return {
+            "id": str(self.id),
+            "full_name": self.full_name,
+            "email": self.email,
+            "role": self.role,
+            "designation": self.designation,
+            "bio": self.bio,
+            # "project_id": str(self.project_id)
+        }
 
 # class Task(db.Model):
 #     id = db.Column(db.Integer, primary_key=True)
