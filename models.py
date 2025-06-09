@@ -1,9 +1,11 @@
+import uuid
 from flask_sqlalchemy import SQLAlchemy
 from flask_login import UserMixin
 from flask_bcrypt import Bcrypt
 from datetime import datetime
 from enum import Enum
 from sqlalchemy import Enum as SQLAlchemyEnum
+from sqlalchemy.dialects.postgresql import UUID
 
 db = SQLAlchemy()
 bcrypt = Bcrypt()
@@ -15,7 +17,8 @@ class Status(Enum):
     ON_HOLD = "On Hold"
 
 class User(UserMixin, db.Model):
-    id = db.Column(db.Integer, primary_key=True)
+    # id = db.Column(db.Integer, primary_key=True)
+    id= db.Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     username = db.Column(db.String(50), unique=True, nullable=False)
     email = db.Column(db.String(100), unique=True, nullable=False)
     clerk_id = db.Column(db.String(100), nullable=False)
@@ -23,7 +26,8 @@ class User(UserMixin, db.Model):
     # team_members = db.relationship('TeamMember', backref='user', lazy=True)
 
 class Project(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
+    # id = db.Column(db.Integer, primary_key=True)
+    id= db.Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     title = db.Column(db.String(100), nullable=False)
     description = db.Column(db.String(100), nullable=False)
     status = db.Column(SQLAlchemyEnum(Status),nullable=False , default=Status.PLANNING)
@@ -39,7 +43,8 @@ class Project(db.Model):
     completion_date = db.Column(db.DateTime, nullable=True)
     start_date = db.Column(db.DateTime, nullable=True)
     progress = db.Column(db.Integer, default=0)
-    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+    user_id = db.Column(UUID(as_uuid=True), db.ForeignKey('user.id'), nullable=False)
+    # user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
     # tasks = db.relationship('Task', backref='project', lazy=True)
     # team_members = db.relationship('TeamMember', backref='project', lazy=True)
     
