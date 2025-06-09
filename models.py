@@ -28,8 +28,8 @@ class User(UserMixin, db.Model):
     username = db.Column(db.String(50), unique=True, nullable=False)
     email = db.Column(db.String(100), unique=True, nullable=False)
     clerk_id = db.Column(db.String(100), nullable=False)
-    projects = db.relationship('Project', backref='owner', lazy=True)
-    # team_members = db.relationship('TeamMember', backref='user', lazy=True)
+    projects = db.relationship('Project', back_populates='owner', lazy=True)
+    # team_members = db.relationship('TeamMember', back_populates='user', lazy=True)
 
 class Project(db.Model):
     # id = db.Column(db.Integer, primary_key=True)
@@ -53,8 +53,8 @@ class Project(db.Model):
     
     #Relationships
     owner = db.relationship('User', back_populates='projects')
-    team_members = db.relationship('TeamMember', backref='project', lazy=True)
-    tasks = db.relationship('Task', backref='project', lazy=True)
+    team_members = db.relationship('TeamMember', back_populates='project', lazy=True)
+    tasks = db.relationship('Task', back_populates='project', lazy=True)
     
     
     def to_dict(self):
@@ -84,7 +84,11 @@ class Team(db.Model):
     role = db.Column(db.String(50), nullable=False)  # e.g., "Supervisor", "Labor"
     designation = db.Column(db.String(100), nullable=True)
     bio = db.Column(db.Text, nullable=True)
-    project_id = db.Column(UUID(as_uuid=True), db.ForeignKey('project.id'), nullable=False)
+    project_id = db.Column(UUID(as_uuid=True), db.ForeignKey('projects.id'), nullable=False)
+
+#Relationships
+    project = db.relationship('Project', back_populates='team_members')
+    tasks = db.relationship('Task', back_populates='assignee', lazy=True)
 
     def to_dict(self):
         return {
@@ -107,9 +111,17 @@ class Task(db.Model):
     start_date = db.Column(db.DateTime, nullable=True)
     due_date = db.Column(db.DateTime, nullable=True)
     # project_id = db.Column(db.Integer, db.ForeignKey('project.id'), nullable=False)
+    project_id = db.Column(UUID(as_uuid=True), db.ForeignKey('project.id'), nullable=False)
+    assignee_id = db.Column(UUID(as_uuid=True), db.ForeignKey('team.id'), nullable=True)
     # assignee_id = db.Column(db.Integer, db.ForeignKey('team_member.id'), nullable=True)
-    # assignee = db.relationship('TeamMember', backref='tasks')
+    # assignee = db.relationship('TeamMember', back_populates='tasks')
 
+
+#Relationships
+
+    project = db.relationship('Project', back_populates='tasks')
+    assignee = db.relationship('Team', back_populates='tasks')
+    
     def to_dict(self):
         return {
             "id": self.id,
@@ -123,11 +135,4 @@ class Task(db.Model):
             "assignee_id": self.assignee_id
         }      
         
-        #A user logs into the saas application using clerk, and the application retrieves their user information from Clerk.and the user is added t the database in supabase where we can see them.The user can then create a project, which is stored in the database. The user can also add team members to the project, and these team members are stored in the database as well. The user can then create tasks for the project, which are also stored in the database. The user can update the status of the project and tasks, and these updates are reflected in the database. The user can also view their projects, team members, and tasks through the application interface.the relationships between the models are as follows:
-# User has many Projects or a single project
-# Project has many Team Members and Tasks
-# Team Member belongs to a Project
-# Task belongs to a Project and can be assigned to a Team Member
-# Project has many Team Members and Tasks
-# Team Member can many Tasks
-# a project belongs to a user
+       
