@@ -23,16 +23,13 @@ class TaskStatus(Enum):
     ON_HOLD = "On Hold"    
 
 class User(UserMixin, db.Model):
-    # id = db.Column(db.Integer, primary_key=True)
     id= db.Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     username = db.Column(db.String(50), unique=True, nullable=False)
     email = db.Column(db.String(100), unique=True, nullable=False)
     clerk_id = db.Column(db.String(100), nullable=False)
     projects = db.relationship('Project', back_populates='owner', lazy=True)
-    # team_members = db.relationship('TeamMember', back_populates='user', lazy=True)
 
 class Project(db.Model):
-    # id = db.Column(db.Integer, primary_key=True)
     id= db.Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     title = db.Column(db.String(100), nullable=False)
     description = db.Column(db.String(100), nullable=False)
@@ -76,12 +73,11 @@ class Project(db.Model):
             "status": self.status.name
         }
         
-class Team(db.Model):
-    # id = db.Column(db.Integer, primary_key=True)
+class TeamMember(db.Model):
     id= db.Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     full_name = db.Column(db.String(100), nullable=False)
     email = db.Column(db.String(100), nullable=False)
-    role = db.Column(db.String(50), nullable=False)  # e.g., "Supervisor", "Labor"
+    role = db.Column(db.String(50), nullable=False)  
     designation = db.Column(db.String(100), nullable=True)
     bio = db.Column(db.Text, nullable=True)
     project_id = db.Column(UUID(as_uuid=True), db.ForeignKey('projects.id'), nullable=False)
@@ -102,7 +98,6 @@ class Team(db.Model):
         }
 
 class Task(db.Model):
-    # id = db.Column(db.Integer, primary_key=True)
     id= db.Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     title = db.Column(db.String(100), nullable=False)
     description = db.Column(db.Text, nullable=True)
@@ -110,17 +105,15 @@ class Task(db.Model):
     status = db.Column(db.String(20), default='Not Started')  # Not Started/In Progress/Completed
     start_date = db.Column(db.DateTime, nullable=True)
     due_date = db.Column(db.DateTime, nullable=True)
-    # project_id = db.Column(db.Integer, db.ForeignKey('project.id'), nullable=False)
-    project_id = db.Column(UUID(as_uuid=True), db.ForeignKey('project.id'), nullable=False)
-    assignee_id = db.Column(UUID(as_uuid=True), db.ForeignKey('team.id'), nullable=True)
-    # assignee_id = db.Column(db.Integer, db.ForeignKey('team_member.id'), nullable=True)
-    # assignee = db.relationship('TeamMember', back_populates='tasks')
+    project_id = db.Column(UUID(as_uuid=True), db.ForeignKey('projects.id'), nullable=False)
+    assignee_id = db.Column(UUID(as_uuid=True), db.ForeignKey('team_members.id'), nullable=True)
+    
 
 
 #Relationships
 
     project = db.relationship('Project', back_populates='tasks')
-    assignee = db.relationship('Team', back_populates='tasks')
+    assignee = db.relationship('TeamMember', back_populates='tasks')
     
     def to_dict(self):
         return {
@@ -131,8 +124,8 @@ class Task(db.Model):
             "status": self.status,
             "start_date": self.start_date.isoformat() if self.start_date else None,
             "due_date": self.due_date.isoformat() if self.due_date else None,
-            "project_id": self.project_id,
-            "assignee_id": self.assignee_id
+            "project_id": str(self.project_id),
+            "assignee_id": str(self.assignee_id)
         }      
         
        
